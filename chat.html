@@ -1,0 +1,71 @@
+<html>
+  <head>
+    <title>Chat</title>
+    <script src="/socket.io/socket.io.js"></script>
+    </head>
+    <body>
+      <div id="chatRoom"></div>
+        <div id="client"></div>
+        <div id="d2"></div>
+        <input type="text" id="chat"></br>
+        <button type="submit" onClick="sendMessage()">send message</button>
+        <div id="clients" >
+        </div>
+
+      <script>
+        var socket = io.connect('localhost:3000')
+
+        socket.on('connected', function(data){
+          console.log('successed joined');
+          renderOnlineUsers(data);
+          if(!localStorage.nickname){
+            nickname = prompt('what is your nick name')
+            localStorage.nickname=nickname;
+          }
+          else nickname=localStorage.nickname
+          socket.emit('join', localStorage.nickname)
+        })
+
+
+        socket.on('message', function(data){
+          console.log(data);
+          document.getElementById('chatRoom').innerHTML += data+"<br>"
+        });
+
+
+        function sendMessage(){
+          var msg = document.getElementById('chat').value
+          var to=document.querySelector('input[name=toClient]:checked')?.value;
+        
+          if(!to){
+            alert("you must select a user to send a message to")
+            return
+          }
+          socket.emit('message', {
+            msg,to,from:nickname
+          })
+        }
+
+
+        function renderOnlineUsers(clients){
+          let innerHTML=``;
+
+          if(clients.length===0){
+            innerHTML=`no online users`
+          };
+
+          for (let i = 0; i < clients.length; i++) {
+            if(clients[i]==localStorage.nickname) continue;
+            
+            innerHTML+=`
+            <span>
+              <input type="radio" value="${clients[i]}" name="toClient" >
+              ${clients[i]}
+              </span>
+            `
+          }
+          document.getElementById("clients").innerHTML=innerHTML;
+        }
+        </script>
+      <body>
+</html>
